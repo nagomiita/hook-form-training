@@ -1,14 +1,6 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import {
   Select,
   SelectTrigger,
@@ -17,6 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Button from "@mui/material/Button"; // MUIのボタンを使用
+import { XIcon } from "lucide-react"; // アイコンを使用
 
 type Field = {
   id: string;
@@ -72,8 +65,6 @@ const inspectionCategories: Category[] = [
 
 export default function InspectionForm() {
   const [selectedCategoryId, setSelectedCategoryId] = useState("blood_test");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const tableRef = useRef(null);
   const category = inspectionCategories.find(
     (cat) => cat.id === selectedCategoryId
   );
@@ -83,9 +74,6 @@ export default function InspectionForm() {
       id: string;
       [key: string]: any;
     }[];
-    inspectionData: {
-      [key: string]: any;
-    };
   };
 
   const {
@@ -96,8 +84,20 @@ export default function InspectionForm() {
     watch,
   } = useForm<FormData>({
     defaultValues: {
-      records: [{ id: crypto.randomUUID() }],
-      inspectionData: {},
+      records: [
+        {
+          id: crypto.randomUUID(),
+          inspector_id: "",
+          inspection_date: "",
+          patient_name: "",
+          patient_age: "",
+          patient_gender: "",
+          ...category?.fields.reduce((acc, field) => {
+            acc[field.id] = "";
+            return acc;
+          }, {}),
+        },
+      ],
     },
   });
 
@@ -105,19 +105,30 @@ export default function InspectionForm() {
     control,
     name: "records",
   });
-  const records = watch("records", []);
-  const inspectionData = watch("inspectionData", {});
+
+  const records = watch("records");
 
   const onSubmit = (data: any) => {
     console.log("検査結果:", data);
   };
 
+  const addRow = () => {
+    append({
+      id: crypto.randomUUID(),
+      inspector_id: "",
+      inspection_date: "",
+      patient_name: "",
+      patient_age: "",
+      patient_gender: "",
+      ...category?.fields.reduce((acc, field) => {
+        acc[field.id] = "";
+        return acc;
+      }, {}),
+    });
+  };
+
   const showJson = (index: number) => {
-    const combinedData = {
-      ...records[index],
-      inspectionData,
-    };
-    alert(JSON.stringify(combinedData, null, 2));
+    alert(JSON.stringify(records[index], null, 2));
   };
 
   return (
@@ -144,60 +155,60 @@ export default function InspectionForm() {
             </SelectContent>
           </Select>
         </div>
-        <table className="w-full border-collapse border border-gray-300 mb-4">
-          <thead>
-            <tr className="bg-gray-100">
-              {requiredFields.map((field) => (
-                <th key={field.id} className="border p-2 min-w-[200px]">
+        {fields.map((row, index) => (
+          <div
+            key={row.id}
+            className="relative grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-4 p-4 border rounded-md"
+          >
+            {requiredFields.map((field) => (
+              <div key={field.id} className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">
                   {field.label}
-                </th>
-              ))}
-              <th className="border p-2">操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            {fields.map((row, index) => (
-              <tr key={row.id}>
-                {requiredFields.map((field) => (
-                  <td key={field.id} className="border p-2">
-                    <Input
-                      type={field.type}
-                      {...register(`records.${index}.${field.id}`)}
-                      className="w-full"
-                    />
-                  </td>
-                ))}
-                <td className="border p-2 text-center flex gap-2">
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={() => setIsModalOpen(true)}
-                  >
-                    検査入力
-                  </Button>
-                  <Button
-                    variant="contained"
-                    color="info"
-                    onClick={() => showJson(index)}
-                  >
-                    JSON 確認
-                  </Button>
-                  <Button
-                    variant="contained"
-                    color="error"
-                    onClick={() => remove(index)}
-                  >
-                    削除
-                  </Button>
-                </td>
-              </tr>
+                </label>
+                <Input
+                  type={field.type}
+                  {...register(`records.${index}.${field.id}`)}
+                  className="w-full"
+                />
+              </div>
             ))}
-          </tbody>
-        </table>
+            {category?.fields.map((field) => (
+              <div key={field.id} className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  {field.label} {field.unit && `(${field.unit})`}
+                </label>
+                <Input
+                  type={field.type}
+                  {...register(`records.${index}.${field.id}`)}
+                  className="w-full"
+                />
+              </div>
+            ))}
+            {index > 0 && (
+              <button
+                type="button"
+                onClick={() => remove(index)}
+                className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+                style={{ minWidth: "auto", padding: "0.5rem" }}
+              >
+                <XIcon className="w-5 h-5" />
+              </button>
+            )}
+            <Button
+              variant="contained"
+              color="info"
+              onClick={() => showJson(index)}
+              className="mt-4"
+            >
+              JSON 確認
+            </Button>
+          </div>
+        ))}
         <Button
           variant="contained"
           color="primary"
-          onClick={() => append({ id: crypto.randomUUID() })}
+          onClick={addRow}
+          className="mt-4"
         >
           行追加
         </Button>
@@ -210,52 +221,6 @@ export default function InspectionForm() {
           登録
         </Button>
       </form>
-
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="!max-w-screen-2xl w-full p-8">
-          <DialogHeader>
-            <DialogTitle>検査データ入力</DialogTitle>
-            <DialogDescription>
-              検査データを入力してください。
-            </DialogDescription>
-          </DialogHeader>
-          <div ref={tableRef} className="overflow-x-auto w-full">
-            <table className="w-full border-collapse border border-gray-300">
-              <thead>
-                <tr className="bg-gray-100">
-                  {category?.fields.map((field) => (
-                    <th key={field.id} className="border p-2 min-w-[150px]">
-                      {field.label} {field.unit && `(${field.unit})`}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  {category?.fields.map((field) => (
-                    <td key={field.id} className="border p-2">
-                      <Input
-                        type={field.type}
-                        {...register(`inspectionData.${field.id}`)}
-                        className="w-full"
-                      />
-                    </td>
-                  ))}
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="contained"
-              color="secondary"
-              onClick={() => setIsModalOpen(false)}
-            >
-              閉じる
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
