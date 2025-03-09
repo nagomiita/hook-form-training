@@ -10,7 +10,6 @@ import {
 import Button from "@mui/material/Button"; // MUIのボタンを使用
 import { XIcon } from "lucide-react"; // アイコンを使用
 import AddIcon from "@mui/icons-material/Add";
-import { Input } from "@/components/ui/input"; // カスタムコンポーネントをインポート
 import { ButtonInput } from "@/components/ui/buttonInput"; // ボタン付き入力フォームをインポート
 
 type Field = {
@@ -197,14 +196,6 @@ export default function InspectionForm() {
             slotProps={{
               inputLabel: field.type === "date" ? { shrink: true } : undefined,
             }}
-          />
-        );
-      case "Input":
-        return (
-          <Input
-            type={field.type}
-            value={value}
-            onChange={(e) => handleInputChange(index, field.id, e.target.value)}
           />
         );
       case "ButtonInput":
