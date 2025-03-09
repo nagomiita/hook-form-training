@@ -7,6 +7,13 @@ import {
   DialogHeader,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
 import Button from "@mui/material/Button"; // MUIのボタンを使用
 
 type Field = {
@@ -115,6 +122,26 @@ export default function InspectionForm() {
     <div className="p-4 max-w-4xl mx-auto">
       <h2 className="text-xl font-bold mb-4">検査結果登録</h2>
       <form onSubmit={handleSubmit(onSubmit)} className="mt-4">
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700">
+            検査カテゴリ
+          </label>
+          <Select
+            onValueChange={setSelectedCategoryId}
+            defaultValue={selectedCategoryId}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="カテゴリを選択" />
+            </SelectTrigger>
+            <SelectContent>
+              {inspectionCategories.map((category) => (
+                <SelectItem key={category.id} value={category.id}>
+                  {category.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <table className="w-full border-collapse border border-gray-300 mb-4">
           <thead>
             <tr className="bg-gray-100">
