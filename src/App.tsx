@@ -1,7 +1,5 @@
-import React, { useState, useRef } from "react";
+import { useState, useRef } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import {
   Dialog,
@@ -11,8 +9,30 @@ import {
 } from "@/components/ui/dialog";
 import Button from "@mui/material/Button"; // MUIのボタンを使用
 
-const inspectionCategories = {
-  blood_test: {
+type Field = {
+  id: string;
+  label: string;
+  type: string;
+  unit?: string;
+};
+
+type Category = {
+  id: string;
+  name: string;
+  fields: Field[];
+};
+
+const requiredFields: Field[] = [
+  { id: "inspector_id", label: "検査員ID", type: "text" },
+  { id: "inspection_date", label: "検査日", type: "date" },
+  { id: "patient_name", label: "検査対象者名", type: "text" },
+  { id: "patient_age", label: "年齢", type: "number" },
+  { id: "patient_gender", label: "性別", type: "text" },
+];
+
+const inspectionCategories: Category[] = [
+  {
+    id: "blood_test",
     name: "血液検査",
     fields: [
       { id: "hemoglobin", label: "ヘモグロビン", type: "number", unit: "g/dL" },
@@ -21,7 +41,8 @@ const inspectionCategories = {
       { id: "plt", label: "血小板数", type: "number", unit: "thousand/µL" },
     ],
   },
-  urine_test: {
+  {
+    id: "urine_test",
     name: "尿検査",
     fields: [
       { id: "protein", label: "タンパク", type: "text" },
@@ -30,37 +51,33 @@ const inspectionCategories = {
       { id: "specific_gravity", label: "比重", type: "number" },
     ],
   },
-  stool_test: {
+  {
+    id: "stool_test",
     name: "便検査",
     fields: [
       { id: "occult_blood", label: "潜血", type: "text" },
       { id: "ph_level", label: "pHレベル", type: "number" },
     ],
   },
-};
-
-const requiredFields = [
-  { id: "inspector_id", label: "検査員ID", type: "text" },
-  { id: "inspection_date", label: "検査日", type: "date" },
-  { id: "patient_name", label: "検査対象者名", type: "text" },
-  { id: "patient_age", label: "年齢", type: "number" },
-  { id: "patient_gender", label: "性別", type: "text" },
 ];
 
 export default function InspectionForm() {
-  const [selectedCategory, setSelectedCategory] = useState("blood_test");
+  const [selectedCategoryId, setSelectedCategoryId] = useState("blood_test");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const tableRef = useRef(null);
-  const category = inspectionCategories[selectedCategory];
-
-  const schema = z.object(
-    Object.fromEntries(
-      [...requiredFields, ...category.fields].map((field) => [
-        field.id,
-        field.type === "number" ? z.number().optional() : z.string().optional(),
-      ])
-    )
+  const category = inspectionCategories.find(
+    (cat) => cat.id === selectedCategoryId
   );
+
+  type FormData = {
+    records: {
+      id: string;
+      [key: string]: any;
+    }[];
+    inspectionData: {
+      [key: string]: any;
+    };
+  };
 
   const {
     register,
@@ -68,8 +85,7 @@ export default function InspectionForm() {
     control,
     formState: { errors },
     watch,
-  } = useForm({
-    resolver: zodResolver(schema),
+  } = useForm<FormData>({
     defaultValues: {
       records: [{ id: crypto.randomUUID() }],
       inspectionData: {},
@@ -83,11 +99,11 @@ export default function InspectionForm() {
   const records = watch("records", []);
   const inspectionData = watch("inspectionData", {});
 
-  const onSubmit = (data) => {
+  const onSubmit = (data: any) => {
     console.log("検査結果:", data);
   };
 
-  const showJson = (index) => {
+  const showJson = (index: number) => {
     const combinedData = {
       ...records[index],
       inspectionData,
@@ -167,13 +183,13 @@ export default function InspectionForm() {
       </form>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent size="2xl" className="!max-w-screen-2xl w-full p-8">
+        <DialogContent className="!max-w-screen-2xl w-full p-8">
           <DialogHeader>検査データ入力</DialogHeader>
           <div ref={tableRef} className="overflow-x-auto w-full">
             <table className="w-full border-collapse border border-gray-300">
               <thead>
                 <tr className="bg-gray-100">
-                  {category.fields.map((field) => (
+                  {category?.fields.map((field) => (
                     <th key={field.id} className="border p-2 min-w-[150px]">
                       {field.label} {field.unit && `(${field.unit})`}
                     </th>
@@ -182,7 +198,7 @@ export default function InspectionForm() {
               </thead>
               <tbody>
                 <tr>
-                  {category.fields.map((field) => (
+                  {category?.fields.map((field) => (
                     <td key={field.id} className="border p-2">
                       <Input
                         type={field.type}
