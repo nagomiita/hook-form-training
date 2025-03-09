@@ -4,6 +4,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 const inspectionCategories = {
   blood_test: {
@@ -43,12 +49,12 @@ const requiredFields = [
 
 export default function InspectionForm() {
   const [selectedCategory, setSelectedCategory] = useState("blood_test");
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const category = inspectionCategories[selectedCategory];
-  const allFields = [...requiredFields, ...category.fields];
 
   const schema = z.object(
     Object.fromEntries(
-      allFields.map((field) => [
+      [...requiredFields, ...category.fields].map((field) => [
         field.id,
         field.type === "number" ? z.number().optional() : z.string().optional(),
       ])
@@ -79,82 +85,121 @@ export default function InspectionForm() {
   return (
     <div className="p-4 max-w-lg mx-auto">
       <h2 className="text-xl font-bold mb-4">検査結果登録</h2>
-      <select
-        value={selectedCategory}
-        onChange={(e) => setSelectedCategory(e.target.value)}
-        className="border p-2 rounded w-full"
-      >
-        {Object.entries(inspectionCategories).map(([key, { name }]) => (
-          <option key={key} value={key}>
-            {name}
-          </option>
-        ))}
-      </select>
       <form onSubmit={handleSubmit(onSubmit)} className="mt-4">
-        <table className="w-full border-collapse border border-gray-300">
+        {/* requiredFieldsをテーブル形式で表示 */}
+        <table className="w-full border-collapse border border-gray-300 mb-4">
           <thead>
             <tr className="bg-gray-100">
-              {allFields.map((field) => (
-                <th key={field.id} className="border p-2 min-w-[150px]">
-                  {field.label} {field.unit && `(${field.unit})`}
+              {requiredFields.map((field) => (
+                <th key={field.id} className="border p-2">
+                  {field.label}
                 </th>
               ))}
-              <th className="border p-2">操作</th>
             </tr>
           </thead>
           <tbody>
-            {fields.map((row, index) => (
-              <tr key={row.id}>
-                {allFields.map((field) => (
-                  <td key={field.id} className="border p-2">
-                    <Input
-                      type={field.type}
-                      {...register(`records.${index}.${field.id}`)}
-                      className="w-full"
-                    />
-                    {errors?.records?.[index]?.[field.id] && (
-                      <p className="text-red-500 text-sm">入力が必要です</p>
-                    )}
-                  </td>
-                ))}
-                <td className="border p-2 text-center">
-                  <Button
-                    type="button"
-                    onClick={() => remove(index)}
-                    className="bg-red-600 text-white px-3 py-1 rounded"
-                  >
-                    削除
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={() =>
-                      alert(JSON.stringify(records[index], null, 2))
-                    }
-                    className="bg-blue-500 text-white px-3 py-1 rounded ml-2"
-                  >
-                    JSON
-                  </Button>
+            <tr>
+              {requiredFields.map((field) => (
+                <td key={field.id} className="border p-2">
+                  <Input
+                    type={field.type}
+                    {...register(field.id)}
+                    className="w-full"
+                  />
+                  {errors[field.id] && (
+                    <p className="text-red-500 text-sm">入力が必要です</p>
+                  )}
                 </td>
-              </tr>
-            ))}
+              ))}
+            </tr>
           </tbody>
         </table>
-        <div className="mt-4 flex justify-between">
-          <Button
-            type="button"
-            onClick={() => append({ id: crypto.randomUUID() })}
-            className="bg-blue-600 text-white px-4 py-2 rounded"
-          >
-            行追加
-          </Button>
-          <Button
-            type="submit"
-            className="bg-green-600 text-white px-4 py-2 rounded"
-          >
-            登録
-          </Button>
-        </div>
+
+        {/* 検査結果入力用モーダルを呼び出すボタン */}
+        <Button
+          type="button"
+          onClick={() => setIsModalOpen(true)}
+          className="bg-blue-600 text-white px-4 py-2 rounded"
+        >
+          検査入力
+        </Button>
+        <Button
+          type="submit"
+          className="bg-green-600 text-white px-4 py-2 rounded ml-2"
+        >
+          登録
+        </Button>
       </form>
+
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent>
+          <DialogHeader>検査データ入力</DialogHeader>
+          <table className="w-full border-collapse border border-gray-300">
+            <thead>
+              <tr className="bg-gray-100">
+                {category.fields.map((field) => (
+                  <th key={field.id} className="border p-2 min-w-[150px]">
+                    {field.label} {field.unit && `(${field.unit})`}
+                  </th>
+                ))}
+                <th className="border p-2">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {fields.map((row, index) => (
+                <tr key={row.id}>
+                  {category.fields.map((field) => (
+                    <td key={field.id} className="border p-2">
+                      <Input
+                        type={field.type}
+                        {...register(`records.${index}.${field.id}`)}
+                        className="w-full"
+                      />
+                      {errors?.records?.[index]?.[field.id] && (
+                        <p className="text-red-500 text-sm">入力が必要です</p>
+                      )}
+                    </td>
+                  ))}
+                  <td className="border p-2 text-center">
+                    <Button
+                      type="button"
+                      onClick={() => remove(index)}
+                      className="bg-red-600 text-white px-3 py-1 rounded"
+                    >
+                      削除
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() =>
+                        alert(JSON.stringify(records[index], null, 2))
+                      }
+                      className="bg-blue-500 text-white px-3 py-1 rounded ml-2"
+                    >
+                      JSON
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <DialogFooter>
+            <Button
+              type="button"
+              onClick={() => append({ id: crypto.randomUUID() })}
+              className="bg-blue-600 text-white px-4 py-2 rounded"
+            >
+              行追加
+            </Button>
+            <Button
+              type="button"
+              onClick={() => setIsModalOpen(false)}
+              className="bg-gray-600 text-white px-4 py-2 rounded"
+            >
+              閉じる
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
