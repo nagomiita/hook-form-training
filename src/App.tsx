@@ -1,8 +1,7 @@
-import React, { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useState } from "react";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Select } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -23,15 +22,24 @@ const inspectionCategories = {
   },
 };
 
+const requiredFields = [
+  { id: "inspector_id", label: "検査員ID", type: "text" },
+  { id: "inspection_date", label: "検査日", type: "date" },
+  { id: "patient_name", label: "検査対象者名", type: "text" },
+  { id: "patient_age", label: "年齢", type: "number" },
+  { id: "patient_gender", label: "性別", type: "text" },
+];
+
 export default function InspectionForm() {
   const [selectedCategory, setSelectedCategory] = useState("blood_test");
   const category = inspectionCategories[selectedCategory];
+  const allFields = [...requiredFields, ...category.fields];
 
   const schema = z.object(
     Object.fromEntries(
-      category.fields.map((field) => [
+      allFields.map((field) => [
         field.id,
-        field.type === "number" ? z.number() : z.string(),
+        field.type === "number" ? z.number().optional() : z.string().optional(),
       ])
     )
   );
@@ -39,9 +47,16 @@ export default function InspectionForm() {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
+    defaultValues: { records: [{}] },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "records",
   });
 
   const onSubmit = (data) => {
@@ -51,46 +66,71 @@ export default function InspectionForm() {
   return (
     <div className="p-4 max-w-lg mx-auto">
       <h2 className="text-xl font-bold mb-4">検査結果登録</h2>
-      <Select
+      <select
         value={selectedCategory}
         onChange={(e) => setSelectedCategory(e.target.value)}
+        className="border p-2 rounded w-full"
       >
         {Object.entries(inspectionCategories).map(([key, { name }]) => (
           <option key={key} value={key}>
             {name}
           </option>
         ))}
-      </Select>
+      </select>
       <form onSubmit={handleSubmit(onSubmit)} className="mt-4">
         <table className="w-full border-collapse border border-gray-300">
           <thead>
             <tr className="bg-gray-100">
-              {category.fields.map((field) => (
-                <th key={field.id} className="border p-2">
+              {allFields.map((field) => (
+                <th key={field.id} className="border p-2 min-w-[150px]">
                   {field.label} {field.unit && `(${field.unit})`}
                 </th>
               ))}
+              <th className="border p-2">操作</th>
             </tr>
           </thead>
           <tbody>
-            <tr>
-              {category.fields.map((field) => (
-                <td key={field.id} className="border p-2">
-                  <Input
-                    type={field.type}
-                    {...register(field.id)}
-                    className="w-full"
-                  />
-                  {errors[field.id] && (
-                    <p className="text-red-500 text-sm">入力が必要です</p>
-                  )}
+            {fields.map((row, index) => (
+              <tr key={row.id}>
+                {allFields.map((field) => (
+                  <td key={field.id} className="border p-2">
+                    <Input
+                      type={field.type}
+                      {...register(`records.${index}.${field.id}`)}
+                      className="w-full"
+                    />
+                    {errors?.records?.[index]?.[field.id] && (
+                      <p className="text-red-500 text-sm">入力が必要です</p>
+                    )}
+                  </td>
+                ))}
+                <td className="border p-2 text-center">
+                  <Button
+                    type="button"
+                    onClick={() => remove(index)}
+                    className="bg-red-600 text-white px-3 py-1 rounded"
+                  >
+                    削除
+                  </Button>
                 </td>
-              ))}
-            </tr>
+              </tr>
+            ))}
           </tbody>
         </table>
-        <div className="mt-4 text-right">
-          <Button type="submit">登録</Button>
+        <div className="mt-4 flex justify-between">
+          <Button
+            type="button"
+            onClick={() => append({})}
+            className="bg-blue-600 text-white px-4 py-2 rounded"
+          >
+            行追加
+          </Button>
+          <Button
+            type="submit"
+            className="bg-green-600 text-white px-4 py-2 rounded"
+          >
+            登録
+          </Button>
         </div>
       </form>
     </div>
