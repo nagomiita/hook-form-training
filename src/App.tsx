@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
-import { Input } from "@/components/ui/input";
+import TextField from "@mui/material/TextField";
 import {
   Select,
   SelectTrigger,
@@ -158,29 +158,25 @@ export default function InspectionForm() {
         {fields.map((row, index) => (
           <div
             key={row.id}
-            className="relative grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-4 p-4 border rounded-md"
+            className="relative grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-4 p-7 border rounded-md"
           >
             {requiredFields.map((field) => (
               <div key={field.id} className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">
-                  {field.label}
-                </label>
-                <Input
+                <TextField
+                  label={field.label}
                   type={field.type}
                   {...register(`records.${index}.${field.id}`)}
-                  className="w-full"
+                  fullWidth
                 />
               </div>
             ))}
             {category?.fields.map((field) => (
               <div key={field.id} className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">
-                  {field.label} {field.unit && `(${field.unit})`}
-                </label>
-                <Input
+                <TextField
+                  label={field.label}
                   type={field.type}
                   {...register(`records.${index}.${field.id}`)}
-                  className="w-full"
+                  fullWidth
                 />
               </div>
             ))}
@@ -188,8 +184,8 @@ export default function InspectionForm() {
               <button
                 type="button"
                 onClick={() => remove(index)}
-                className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-                style={{ minWidth: "auto", padding: "0.5rem" }}
+                className="absolute top-1 right-1 text-gray-500 hover:text-gray-700"
+                style={{ minWidth: "auto", padding: "0.01rem" }}
               >
                 <XIcon className="w-5 h-5" />
               </button>
@@ -198,7 +194,8 @@ export default function InspectionForm() {
               variant="contained"
               color="info"
               onClick={() => showJson(index)}
-              className="mt-4"
+              className="h-[77%] w-full"
+              fullWidth
             >
               JSON 確認
             </Button>
