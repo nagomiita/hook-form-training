@@ -11,6 +11,8 @@ const inspectionCategories = {
     fields: [
       { id: "hemoglobin", label: "ヘモグロビン", type: "number", unit: "g/dL" },
       { id: "rbc", label: "赤血球数", type: "number", unit: "million/µL" },
+      { id: "wbc", label: "白血球数", type: "number", unit: "thousand/µL" },
+      { id: "plt", label: "血小板数", type: "number", unit: "thousand/µL" },
     ],
   },
   urine_test: {
@@ -18,6 +20,15 @@ const inspectionCategories = {
     fields: [
       { id: "protein", label: "タンパク", type: "text" },
       { id: "glucose", label: "グルコース", type: "text" },
+      { id: "ph", label: "pH値", type: "number" },
+      { id: "specific_gravity", label: "比重", type: "number" },
+    ],
+  },
+  stool_test: {
+    name: "便検査",
+    fields: [
+      { id: "occult_blood", label: "潜血", type: "text" },
+      { id: "ph_level", label: "pHレベル", type: "number" },
     ],
   },
 };
