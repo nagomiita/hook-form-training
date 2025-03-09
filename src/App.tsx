@@ -6,6 +6,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogFooter,
+  DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -211,7 +213,12 @@ export default function InspectionForm() {
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="!max-w-screen-2xl w-full p-8">
-          <DialogHeader>検査データ入力</DialogHeader>
+          <DialogHeader>
+            <DialogTitle>検査データ入力</DialogTitle>
+            <DialogDescription>
+              検査データを入力してください。
+            </DialogDescription>
+          </DialogHeader>
           <div ref={tableRef} className="overflow-x-auto w-full">
             <table className="w-full border-collapse border border-gray-300">
               <thead>
