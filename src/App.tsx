@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -49,15 +49,17 @@ export default function InspectionForm() {
     handleSubmit,
     control,
     formState: { errors },
+    watch,
   } = useForm({
     resolver: zodResolver(schema),
-    defaultValues: { records: [{}] },
+    defaultValues: { records: [] },
   });
 
   const { fields, append, remove } = useFieldArray({
     control,
     name: "records",
   });
+  const records = watch("records", []);
 
   const onSubmit = (data) => {
     console.log("検査結果:", data);
@@ -112,6 +114,15 @@ export default function InspectionForm() {
                   >
                     削除
                   </Button>
+                  <Button
+                    type="button"
+                    onClick={() =>
+                      alert(JSON.stringify(records[index], null, 2))
+                    }
+                    className="bg-blue-500 text-white px-3 py-1 rounded ml-2"
+                  >
+                    JSON
+                  </Button>
                 </td>
               </tr>
             ))}
@@ -120,7 +131,7 @@ export default function InspectionForm() {
         <div className="mt-4 flex justify-between">
           <Button
             type="button"
-            onClick={() => append({})}
+            onClick={() => append({ id: crypto.randomUUID() })}
             className="bg-blue-600 text-white px-4 py-2 rounded"
           >
             行追加
