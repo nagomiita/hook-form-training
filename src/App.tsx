@@ -11,6 +11,7 @@ import Button from "@mui/material/Button"; // MUIのボタンを使用
 import { XIcon } from "lucide-react"; // アイコンを使用
 import AddIcon from "@mui/icons-material/Add";
 import { ButtonInput } from "@/components/ui/buttonInput"; // ボタン付き入力フォームをインポート
+import SerialTerminal from "./SerialTerminal";
 
 type Field = {
   id: string;
@@ -123,26 +124,39 @@ const inspectionCategories: Category[] = [
 
 export default function InspectionForm() {
   const [selectedCategoryId, setSelectedCategoryId] = useState("blood_test");
+  const [isTerminalOpen, setIsTerminalOpen] = useState(false);
   const category = inspectionCategories.find(
     (cat) => cat.id === selectedCategoryId
   );
   const categoryFields = category?.fields || [];
 
-  const [records, setRecords] = useState<{ [key: string]: any }[]>([
+  const [records, setRecords] = useState<
+    { id: string; [key: string]: number | string | Date }[]
+  >([
     {
       id: crypto.randomUUID(),
-      ...requiredFields.reduce((acc: { [key: string]: any }, field) => {
-        acc[field.id] = "";
-        return acc;
-      }, {}),
-      ...categoryFields.reduce((acc: { [key: string]: any }, field) => {
-        acc[field.id] = "";
-        return acc;
-      }, {}),
+      ...requiredFields.reduce(
+        (acc: { [key: string]: number | string | Date }, field) => {
+          acc[field.id] = "";
+          return acc;
+        },
+        {}
+      ),
+      ...categoryFields.reduce(
+        (acc: { [key: string]: number | string | Date }, field) => {
+          acc[field.id] = "";
+          return acc;
+        },
+        {}
+      ),
     },
   ]);
 
-  const handleInputChange = (index: number, fieldId: string, value: any) => {
+  const handleInputChange = (
+    index: number,
+    fieldId: string,
+    value: number | string | Date
+  ) => {
     const newRecords = [...records];
     newRecords[index][fieldId] = value;
     setRecords(newRecords);
@@ -153,14 +167,20 @@ export default function InspectionForm() {
       ...records,
       {
         id: crypto.randomUUID(),
-        ...requiredFields.reduce((acc: { [key: string]: any }, field) => {
-          acc[field.id] = "";
-          return acc;
-        }, {}),
-        ...categoryFields.reduce((acc: { [key: string]: any }, field) => {
-          acc[field.id] = "";
-          return acc;
-        }, {}),
+        ...requiredFields.reduce(
+          (acc: { [key: string]: number | string | Date }, field) => {
+            acc[field.id] = "";
+            return acc;
+          },
+          {}
+        ),
+        ...categoryFields.reduce(
+          (acc: { [key: string]: number | string | Date }, field) => {
+            acc[field.id] = "";
+            return acc;
+          },
+          {}
+        ),
       },
     ]);
   };
@@ -204,7 +224,6 @@ export default function InspectionForm() {
             label={field.label}
             type={field.type}
             onButtonClick={handleButtonClick}
-            value={value}
             onChange={(e) => handleInputChange(index, field.id, e.target.value)}
           />
         );
@@ -221,10 +240,19 @@ export default function InspectionForm() {
 
   return (
     <div className="p-4 w-full mx-auto">
-      <h2 className="text-xl font-bold mb-4">検査結果登録</h2>
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-bold mb-4">検査結果登録</h2>
+        <Button onClick={() => setIsTerminalOpen(true)}>
+          Open Serial Terminal
+        </Button>
+      </div>
+
       <form onSubmit={handleSubmit} className="mt-4">
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="category-select"
+            className="block text-sm font-medium text-gray-700"
+          >
             検査カテゴリ
           </label>
           <Select
@@ -297,6 +325,7 @@ export default function InspectionForm() {
             >
               一時保存
             </Button>
+
             <Button
               variant="contained"
               color="success"
@@ -305,6 +334,11 @@ export default function InspectionForm() {
             >
               登録
             </Button>
+
+            <SerialTerminal
+              isOpen={isTerminalOpen}
+              onClose={() => setIsTerminalOpen(false)}
+            />
           </div>
         </div>
       </form>
