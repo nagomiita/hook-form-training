@@ -60,7 +60,7 @@ const SerialTerminal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
   }, []);
 
   const connectToPort = async () => {
-    const serial = navigator.serial || polyfill;
+    const serial = polyfill;
     try {
       const selectedPort = await serial.requestPort({});
       setPort(selectedPort);
